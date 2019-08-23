@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-// import 'package:ichat_pfe/entities/user.dart';
+import 'package:chatapp/entities/user.dart';
 
-class FireFunctions {
+class FirebaseUtils {
   final firebaseAuth = FirebaseAuth.instance;
   static final base = FirebaseDatabase.instance.reference();
   final base_user = base.child("users");
@@ -43,33 +43,33 @@ class FireFunctions {
     return true;
   }
 
-  // sendMessage(User user, User moi, String text, String imageUrl) {
-  //   String date = new DateTime.now().millisecondsSinceEpoch.toString();
-  //   Map map = {
-  //     "from": moi.id,
-  //     "to": user.id,
-  //     "text": text,
-  //     "imageUrl": imageUrl,
-  //     "dateString": date
-  //   };
-  //   base_message.child(getMessageRef(moi.id, user.id)).child(date).set(map);
-  //   base_chat
-  //       .child(moi.id)
-  //       .child(user.id)
-  //       .set(getChat(moi.id, user, text, date));
-  //   base_chat
-  //       .child(user.id)
-  //       .child(moi.id)
-  //       .set(getChat(moi.id, moi, text, date));
-  // }
+  sendMessage(User user, User moi, String text, String imageUrl) {
+    String date = new DateTime.now().millisecondsSinceEpoch.toString();
+    Map map = {
+      "from": moi.id,
+      "to": user.id,
+      "text": text,
+      "imageUrl": imageUrl,
+      "dateString": date
+    };
+    base_message.child(getMessageRef(moi.id, user.id)).child(date).set(map);
+    base_chat
+        .child(moi.id)
+        .child(user.id)
+        .set(getChat(moi.id, user, text, date));
+    base_chat
+        .child(user.id)
+        .child(moi.id)
+        .set(getChat(moi.id, moi, text, date));
+  }
 
-  // Map getChat(String sender, User user, String text, String dateString) {
-  //   Map map = user.toMap();
-  //   map["id"] = sender;
-  //   map["last_message"] = text;
-  //   map["dateString"] = dateString;
-  //   return map;
-  // }
+  Map getChat(String sender, User user, String text, String dateString) {
+    Map map = user.toMap();
+    map["id"] = sender;
+    map["last_message"] = text;
+    map["dateString"] = dateString;
+    return map;
+  }
 
   String getMessageRef(String from, String to) {
     String resultat = "";
@@ -81,7 +81,8 @@ class FireFunctions {
     return resultat;
   }
 
-  Future<FirebaseUser> signup(String email, String password, String name) async {
+  Future<FirebaseUser> signup(
+      String email, String password, String name) async {
     final FirebaseUser user = await firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     String uid = user.uid;
@@ -96,28 +97,28 @@ class FireFunctions {
     return user;
   }
 
-  // Future<User> getUser(String id) async {
-  //   DataSnapshot snapshot = await base_user.child(id).once();
-  //   return new User(snapshot);
-  // }
+  Future<User> getUser(String id) async {
+    DataSnapshot snapshot = await base_user.child(id).once();
+    return new User(snapshot);
+  }
 
   addUser(String uid, Map map) {
     base_user.child(uid).set(map);
   }
 
   Future<void> deleteChat(String myId, String pId) async {
-    await FireFunctions()
+    await FirebaseUtils()
         .base_message
-        .child(FireFunctions().getMessageRef(myId, pId))
+        .child(FirebaseUtils().getMessageRef(myId, pId))
         .remove()
         .then((onValue) async {
-      await FireFunctions()
+      await FirebaseUtils()
           .base_chat
           .child(myId)
           .child(pId)
           .remove()
           .then((onValue) async {
-        await FireFunctions().base_chat.child(pId).child(myId).remove();
+        await FirebaseUtils().base_chat.child(pId).child(myId).remove();
       });
     }).catchError((onError) {
       print(onError);
